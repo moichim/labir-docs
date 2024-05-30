@@ -1,0 +1,100 @@
+# Core overview
+
+The core library handles the main underlying functionality in pure Typescript.
+
+## Concepts
+
+- framework agnostic
+- with a fixed structure of components
+- with observable properties exposed
+
+## Structure
+
+It is obligatory to start with `ThermalManager` and use its methods to build objects lower in the hierarchy.
+
+```javascript
+// There must be only one instance of ThermalManager
+const manager = new ThermalManager;
+
+// Every context is defined in a registry
+// A registry stores common attributes from groups and their instances
+const registry = manager.addOrGetRegistry( "registry_id" );
+
+// Group stands between a registry and instances
+const group = registry.addOrGetGroup( "group_id" );
+
+// Loading is performed using a registry
+registry.loadOneFile({thermalUrl: "some_irl.lrc"}, group.id)
+```
+
+## Observable properties
+
+Properties of core elements are stored in a way that allows observing & manipulation from the outside.
+
+The properties allways have:
+- a given type `T`
+- a public value `value: T`
+- a private setter `set( val: T )` that needs to be used by all public setters
+- any number of public setters (implemented per property)
+- a method for adding listeners `addListener( key: string, ( val: T ) => void )`
+- additional public properties with additional data
+
+### Example
+
+Working with the palette property of the `ThermalManager`:
+
+```javascript filename="example-palette.ts" copy
+// create the manager
+const manager = new ThermalManager;
+
+// Public properties
+manager.palette.value; // string (key of the palette)
+manager.palette.palette; // ThermalPalette[] (with complete attributes)
+manager.palette.availablePalettes; // ThermalPaletteType[]
+
+// The setter
+manager.palette.setPalette( "iron" ) // Palettes are set using their keys
+
+// Listeners
+
+manager.addListener( "some_purpose", ( value: string ) => {
+    // ... do something whenever manager.value changes
+} )
+
+manager.addListener( "some_other_purpose", ( value: string ) => {
+    // ... another listener
+} );
+
+manager.removeListener( "some_purpose" );
+
+```
+
+### List of properties
+
+#### ThermalManager
+
+| Property   | Data type of `value` | Setter | Description |
+| :----- | :---- | :----- | :------ |
+|  palette   |  `string` | `setPalette` | Palette is shared across all registries. |
+
+#### ThermalRegistry
+
+| Property   | Data type of `value` | Setter | Description |
+| :----- | :---- | :----- | :------ |
+|  minmax   |  `ThermalMinmaxOrUndefined` | - | Calculated from all child groups. |
+|  range   |  `ThermalRangeOrUndefined` | `imposeRange()` | Range is projected into all child groups and instances. |
+|  opacity   |  `number` | `imposeOpacity()` | Opacity id imposed into all child groups and instances. |
+|  histogram   |  `ThermalStatistics[]` | - | Calculated from child groups and instances. |
+|  loading   |  `number` | - | Reflects the current loading state. |
+|  highlight   |  `number` | - | Timestamp to be highlighted @deprecated. |
+|  Groups   |  `GroupState` | `addOrRemoveGroup()` |  |
+
+#### ThermalGroup
+
+| Property   | Data type of `value` | Setter | Description |
+| :----- | :---- | :----- | :------ |
+|  minmax   |  `ThermalMinmaxOrUndefined` | - | Calculated from all child instances. |
+|  cursorPosition   |  `ThermalCursorPosition` | - | Synces the cursor position across all group's instances. |
+|  instances   |  `number` | `ThermalFileInstance[]` |  |
+
+

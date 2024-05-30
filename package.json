@@ -18,7 +18,11 @@
   },
   "homepage": "https://github.com/shuding/nextra-docs-template#readme",
   "dependencies": {
+    "@labir/core": "^1.0.8",
     "@labir/react-bridge": "^1.0.17",
+    "@markdoc/markdoc": "^0.4.0",
+    "@markdoc/next.js": "^0.3.7",
+    "micro-docgen": "^0.2.0",
     "next": "^13.0.6",
     "nextra": "latest",
     "nextra-theme-docs": "latest",

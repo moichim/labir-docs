@@ -1,0 +1,7 @@
+{
+    "index": "Overview",
+    "ThermalManager": "ThermalManager",
+    "ThermalRegistry": "ThermalRegistry",
+    "ThermalGroup": "ThermalGroup",
+    "ThermalFile": "ThermalFile"
+  }
