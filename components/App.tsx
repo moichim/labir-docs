@@ -1,6 +1,6 @@
 "use client";
 
-import { HistogramResolutionInputHeadless, HistogramResolutionSliderHeadless, OpacitySliderDefault, Orientation, RangeButtonAutoHeadless, RangeButtonFullHeadless, RangeHeadless, ThermalInstance, useThermalContext, useThermalGroupInstancesState } from "@labir/react-bridge";
+import { HistogramResolutionInputHeadless, HistogramResolutionSliderHeadless, OpacitySliderDefault, Orientation, PaletteDropdownHeadless, RangeButtonAutoHeadless, RangeButtonFullHeadless, RangeHeadless, ThermalInstance, useThermalContext, useThermalGroupInstancesState } from "@labir/react-bridge";
 import React, { useEffect } from "react";
 
 export const App: React.FC = () => {
@@ -13,16 +13,24 @@ export const App: React.FC = () => {
   const instances = useThermalGroupInstancesState(group, "app");
 
   useEffect(() => {
-    registry.loadOneFile(
-      {
-        thermalUrl: "/image-thermal 2024-02-12 10-15-07.lrc",
-      },
-      group.id
-    );
+
+    registry.loadFiles({
+      [group.id]: [
+        {thermalUrl: "/image-thermal 2021-11-24 11-18-20.lrc"},
+        {thermalUrl: "/image-thermal 2024-01-12 14-09-37.lrc"},
+        {thermalUrl: "/image-thermal 2024-01-24 10-05-03.lrc"},
+        {thermalUrl: "/image-thermal 2024-01-26 10-12-52.lrc"},
+        {thermalUrl: "/image-thermal 2024-01-26 10-12-52.lrc"},
+        {thermalUrl: "/image-thermal 2024-02-12 10-15-07.lrc"},
+      ]
+    });
+
   }, []);
 
   return (
     <div>
+
+      <PaletteDropdownHeadless />
 
       <OpacitySliderDefault registry={registry} />
       <RangeButtonFullHeadless registry={registry}></RangeButtonFullHeadless>
