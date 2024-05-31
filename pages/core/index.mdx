@@ -12,6 +12,10 @@ The core library handles the main underlying functionality in pure Typescript.
 
 It is obligatory to start with `ThermalManager` and use its methods to build objects lower in the hierarchy.
 
+`ThermalManager` -> `ThermalRegistry` -> `ThermalGroup` -> `ThermalFileinstance`
+
+### Example
+
 ```javascript
 // There must be only one instance of ThermalManager
 const manager = new ThermalManager;
@@ -24,77 +28,67 @@ const registry = manager.addOrGetRegistry( "registry_id" );
 const group = registry.addOrGetGroup( "group_id" );
 
 // Loading is performed using a registry
-registry.loadOneFile({thermalUrl: "some_irl.lrc"}, group.id)
-```
+registry.loadOneFile({thermalUrl: "some_irl.lrc"}, group.id);
 
-## Observable properties
 
-Properties of core elements are stored in a way that allows observing & manipulation from the outside.
+// The rendering itself depends on framework
+// Below is the principle:
 
-The properties allways have:
-- a given type `T`
-- a public value `value: T`
-- a private setter `set( val: T )` that needs to be used by all public setters
-- any number of public setters (implemented per property)
-- a method for adding listeners `addListener( key: string, ( val: T ) => void )`
-- additional public properties with additional data
+// You need to add listener to the registry
+registry.loading.addListener( "mount_after_load", (value) => {
 
-### Example
+    // Whenever is the registry loading, unmount all instances
+    if ( value === true ) {
+        registry.groups.forEveryGroup(
+            group => group.instances.forEveryInstance(
+                instance => instance.unmountFromDOM()
+            )
+        );
+    }
 
-Working with the palette property of the `ThermalManager`:
+    // Whenever the registry finishes loading, mount instances somewhere
+    if (value === false) {
+        registry.groups.forEveryGroup(
+            group => group.forEveryInstance(
+                instance => {
+                    instance.mountToDom( /* a HTMLDivElement */ );
+                    instance.draw();
+                }
+            )
+        );
 
-```javascript filename="example-palette.ts" copy
-// create the manager
-const manager = new ThermalManager;
+    }
 
-// Public properties
-manager.palette.value; // string (key of the palette)
-manager.palette.palette; // ThermalPalette[] (with complete attributes)
-manager.palette.availablePalettes; // ThermalPaletteType[]
-
-// The setter
-manager.palette.setPalette( "iron" ) // Palettes are set using their keys
-
-// Listeners
-
-manager.addListener( "some_purpose", ( value: string ) => {
-    // ... do something whenever manager.value changes
-} )
-
-manager.addListener( "some_other_purpose", ( value: string ) => {
-    // ... another listener
 } );
-
-manager.removeListener( "some_purpose" );
-
 ```
 
-### List of properties
+### Functional Description
 
-#### ThermalManager
+#### `ThermalManager`
 
-| Property   | Data type of `value` | Setter | Description |
-| :----- | :---- | :----- | :------ |
-|  palette   |  `string` | `setPalette` | Palette is shared across all registries. |
+- the main object that should live as singleton across all the application
+- stores cache of loaded files as `ThermalFileSource`
+- stores the `palette` option and propagates its config to all children
+- creates and destroys instances of `ThermalRegistry`
 
-#### ThermalRegistry
+#### `ThermalRegistry`
 
-| Property   | Data type of `value` | Setter | Description |
-| :----- | :---- | :----- | :------ |
-|  minmax   |  `ThermalMinmaxOrUndefined` | - | Calculated from all child groups. |
-|  range   |  `ThermalRangeOrUndefined` | `imposeRange()` | Range is projected into all child groups and instances. |
-|  opacity   |  `number` | `imposeOpacity()` | Opacity id imposed into all child groups and instances. |
-|  histogram   |  `ThermalStatistics[]` | - | Calculated from child groups and instances. |
-|  loading   |  `number` | - | Reflects the current loading state. |
-|  highlight   |  `number` | - | Timestamp to be highlighted @deprecated. |
-|  Groups   |  `GroupState` | `addOrRemoveGroup()` |  |
+- a display context with files organised into groups
+- handles loading of files
+- stores and synchronises most of thermal display parameters
 
-#### ThermalGroup
+### `ThermalGroup`
 
-| Property   | Data type of `value` | Setter | Description |
-| :----- | :---- | :----- | :------ |
-|  minmax   |  `ThermalMinmaxOrUndefined` | - | Calculated from all child instances. |
-|  cursorPosition   |  `ThermalCursorPosition` | - | Synces the cursor position across all group's instances. |
-|  instances   |  `number` | `ThermalFileInstance[]` |  |
+- stores a group of files
+- calculates some properties (eg. `minmax` of the entire group)
+- synchronises `cursorPosition` across all child files
 
+### `ThermalFileInstance`
+
+- a single file
+- based on `ThermalFileSource` that is cached in `ThermalManager`
+- renders the thermogram in `<canvas>` element
+- needs to be binded into a provided `HTMLDivElement` (a reference in React)
+- handles all user interactions
+- the internal drawing is written from scratch, without React & Frameworks
 
